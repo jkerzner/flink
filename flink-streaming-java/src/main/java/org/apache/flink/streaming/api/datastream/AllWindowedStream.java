@@ -51,6 +51,8 @@ import org.apache.flink.streaming.runtime.operators.windowing.functions.Internal
 import org.apache.flink.streaming.runtime.operators.windowing.functions.InternalSingleValueAllWindowFunction;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecordSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A {@code AllWindowedStream} represents a data stream where the stream of
@@ -90,6 +92,8 @@ public class AllWindowedStream<T, W extends Window> {
 
 	/** The user-specified allowed lateness. */
 	private long allowedLateness = 0L;
+
+	private StreamThingHandler thandler = new LoggingHandler();
 
 	@PublicEvolving
 	public AllWindowedStream(DataStream<T> input,
@@ -499,6 +503,7 @@ public class AllWindowedStream<T, W extends Window> {
 	 * @return The transformed DataStream.
 	 */
 	public SingleOutputStreamOperator<T> sum(int positionToSum) {
+		thandler.handleThing("UMOOOOOOO");
 		return aggregate(new SumAggregator<>(positionToSum, input.getType(), input.getExecutionConfig()));
 	}
 
@@ -516,6 +521,7 @@ public class AllWindowedStream<T, W extends Window> {
 	 * @return The transformed DataStream.
 	 */
 	public SingleOutputStreamOperator<T> sum(String field) {
+		thandler.handleThing("UMOOOOOOO");
 		return aggregate(new SumAggregator<>(field, input.getType(), input.getExecutionConfig()));
 	}
 
@@ -707,6 +713,20 @@ public class AllWindowedStream<T, W extends Window> {
 		@Override
 		public Byte getKey(T value) throws Exception {
 			return 0;
+		}
+	}
+
+	public interface StreamThingHandler extends java.io.Serializable {
+		void handleThing(String msg);
+	}
+
+	public static final class LoggingHandler implements StreamThingHandler {
+		private static final long serialVersionUID = 1L;
+		private static final Logger LOG = LoggerFactory.getLogger(AllWindowedStream.class);
+
+		@Override
+		public void handleThing(String msg) {
+			LOG.warn("LOGGINGHANDLER SAYS " + msg);
 		}
 	}
 }
