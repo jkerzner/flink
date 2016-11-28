@@ -38,6 +38,8 @@ import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.Window;
 import org.apache.flink.streaming.runtime.operators.windowing.functions.InternalWindowFunction;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -87,6 +89,8 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 				element.getValue(),
 				element.getTimestamp(),
 				windowAssignerContext);
+		Logger LOG = LoggerFactory.getLogger(EvictingWindowOperator.class);
+		LOG.warn("ZZZZZZZZZZ Doing processElement in EvictingWindowOperator");
 
 		final K key = (K) getStateBackend().getCurrentKey();
 

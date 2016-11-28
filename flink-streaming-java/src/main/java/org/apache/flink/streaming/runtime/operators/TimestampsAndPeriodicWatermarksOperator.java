@@ -23,6 +23,8 @@ import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A stream operator that extracts timestamps from stream elements and
@@ -62,6 +64,9 @@ public class TimestampsAndPeriodicWatermarksOperator<T>
 	public void processElement(StreamRecord<T> element) throws Exception {
 		final long newTimestamp = userFunction.extractTimestamp(element.getValue(), 
 				element.hasTimestamp() ? element.getTimestamp() : Long.MIN_VALUE);
+
+		Logger LOG = LoggerFactory.getLogger(TimestampsAndPeriodicWatermarksOperator.class);
+		LOG.warn("ZZZZZZZZZZZZZZZ Doing processElement in TimestampsAndPeriodicWatermarksOperator");
 		
 		output.collect(element.replace(element.getValue(), newTimestamp));
 	}
