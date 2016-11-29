@@ -26,21 +26,19 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 
 	@Override
 	public void run(SourceContext ctx) throws Exception {
-		LOG.warn("PPPPPPPPPPPPPP in run");
 		running = true;
 
 		while(running) {
 			synchronized(list) {
 				synchronized (ctx.getCheckpointLock()) {
 					if (list.size() > 0) {
-						String output = "UMOOOOOOOOOOO " + (String) list.remove(0);
-						ctx.collect(output);
+						//String output = "UMOOOOOOOOOOO " + (String) list.remove(0);
+						ctx.collect((String) list.remove(0));
 					}
 					//ctx.collect(new String(Thread.currentThread().getName()));
 				}
 			}
 		}
-
 
 	}
 
@@ -49,20 +47,12 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 		running = false;
 	}
 
-	public void doLog() {
-		LOG.warn("PPPPPPPPPPPPPPPP doLog start: " + toggle + " " + list.size());
-		toggle = "fromLogger";
-	}
-
 	public void capture(T e) {
-		LOG.warn("PPPPPPPPPPPPPPPP capture start: " + toggle);
 		synchronized (list) {
 			list.add(e);
 		}
 
 		LOG.warn("PPPPPPPPPPPPPPPP Appended " + list.size() + list.toString() + Thread.currentThread().getName());
-		toggle = "fromCapture";
-
 		return;
 	}
 
@@ -73,6 +63,6 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 
 	@Override
 	public void stop() {
-		LOG.info("PPPPPPPPPPPPPP Stopped");
+		running = false;
 	}
 }
