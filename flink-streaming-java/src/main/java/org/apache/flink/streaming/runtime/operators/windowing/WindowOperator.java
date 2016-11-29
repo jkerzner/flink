@@ -390,8 +390,10 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 				// drop if the window is already late
 				if (isLate(actualWindow)) {
-					LOG.warn("ZZZZZZZZZZZZZZ MergingWindow element is very late");
 					mergingWindows.retireWindow(actualWindow);
+					//LOG.warn("ZZZZZZZZZZZZZZ MergingWindow element is very late " + element.toString());
+					// kerzn002: AAAAA: merging
+					this.lateSink.capture(element.toString());
 					continue;
 				}
 
@@ -432,8 +434,8 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 				// drop if the window is already late
 				if (isLate(window)) {
 					LOG.warn("QQQQQQQQQQQ non-MergingWindow element is very late: " + element.getValue().toString());
+					// kerzn002: BBBBB: non-merging
 					this.lateSink.capture(element.toString());
-					this.lateSink.doLog();
 					continue;
 				}
 
