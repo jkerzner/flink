@@ -36,8 +36,6 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.streaming.runtime.operators.Triggerable;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.apache.flink.streaming.runtime.tasks.StreamTaskState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -206,8 +204,6 @@ public abstract class AbstractAlignedProcessingTimeWindowOperator<KEY, IN, OUT, 
 	
 	@Override
 	public void processElement(StreamRecord<IN> element) throws Exception {
-		Logger LOG = LoggerFactory.getLogger(AbstractAlignedProcessingTimeWindowOperator.class);
-		LOG.warn("ZZZZZZZZZZ Doing processElement in AbstractAlignedProcessingTimeWindowOperator");
 		panes.addElementToLatestPane(element.getValue());
 	}
 
