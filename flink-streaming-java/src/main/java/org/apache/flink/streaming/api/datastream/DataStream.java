@@ -93,8 +93,6 @@ import org.apache.flink.streaming.runtime.partitioner.StreamPartitioner;
 import org.apache.flink.streaming.util.keys.KeySelectorUtil;
 import org.apache.flink.streaming.util.serialization.SerializationSchema;
 import org.apache.flink.util.Preconditions;
-import org.slf4j.Logger;		//kerzn002
-import org.slf4j.LoggerFactory;		//kerzn002
 
 /**
  * A DataStream represents a stream of elements of the same type. A DataStream
@@ -121,10 +119,6 @@ public class DataStream<T> {
 	 * @param environment The StreamExecutionEnvironment
 	 */
 	public DataStream(StreamExecutionEnvironment environment, StreamTransformation<T> transformation) {
-		// kerzn002: prove that this is being built properly
-		Logger LOG = LoggerFactory.getLogger(DataStream.class);
-		LOG.warn("ZZZZZZZZZZZZZZZZZZ DataStream construtor");
-		// end modification
 		this.environment = Preconditions.checkNotNull(environment, "Execution Environment must not be null.");
 		this.transformation = Preconditions.checkNotNull(transformation, "Stream Transformation must not be null.");
 	}
