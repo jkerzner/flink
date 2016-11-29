@@ -92,13 +92,16 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 		Trigger<? super IN, ? super W> trigger,
 		Evictor<? super IN, ? super W> evictor,
 		long allowedLateness,
-		LateSource<String> lateStream) {
+		LateSource<String> lateSource) {
 
 		super(windowAssigner, windowSerializer, keySelector,
 			keySerializer, null, windowFunction, trigger, allowedLateness);
 		this.evictor = requireNonNull(evictor);
 		this.windowStateDescriptor = windowStateDescriptor;
-		this.lateSink = lateStream;
+
+		// kerzn002: since this class extends WindowOperator, we inherit lateSource
+		this.lateSource = lateSource;
+		LOG = LoggerFactory.getLogger(WindowOperator.class);
 	}
 
 
@@ -109,8 +112,6 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 				element.getValue(),
 				element.getTimestamp(),
 				windowAssignerContext);
-		Logger LOG = LoggerFactory.getLogger(EvictingWindowOperator.class);
-		LOG.warn("ZZZZZZZZZZ Doing processElement in EvictingWindowOperator");
 
 		final K key = (K) getStateBackend().getCurrentKey();
 
@@ -157,6 +158,11 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 				// check if the window is already inactive
 				if (isLate(actualWindow)) {
 					mergingWindows.retireWindow(actualWindow);
+
+					// kerzn002: CCCCC: merging
+					LOG.warn("CCCCC MergingWindow element is very late " + element.toString());
+					this.lateSource.capture(element.toString());
+
 					continue;
 				}
 
@@ -197,6 +203,11 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 
 				// check if the window is already inactive
 				if (isLate(window)) {
+
+					// kerzn002: DDDDD: non-merging
+					LOG.warn("DDDDD non-MergingWindow element is very late: " + element.getValue().toString());
+					this.lateSource.capture(element.toString());
+
 					continue;
 				}
 

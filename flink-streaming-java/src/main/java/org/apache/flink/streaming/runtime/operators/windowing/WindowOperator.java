@@ -40,15 +40,12 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.InputTypeConfigurable;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 import org.apache.flink.metrics.MetricGroup;
 import org.apache.flink.runtime.state.AbstractStateBackend;
 import org.apache.flink.runtime.state.StateHandle;
 import org.apache.flink.streaming.api.datastream.LateSource;
-import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
-import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator;
 import org.apache.flink.streaming.api.operators.ChainingStrategy;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
@@ -187,8 +184,8 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 	protected transient Map<K, MergingWindowSet<W>> mergingWindowsByKey;
 
-	protected LateSource lateSink;
-
+	protected LateSource lateSource;
+	Logger LOG = LoggerFactory.getLogger(WindowOperator.class);
 	/**
 	 * Creates a new {@code WindowOperator} based on the given policies and user functions.
 	 */
@@ -215,11 +212,10 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 		this.allowedLateness = allowedLateness;
 
 		setChainingStrategy(ChainingStrategy.ALWAYS);
-		Logger LOG = LoggerFactory.getLogger(WindowOperator.class);
-		LOG.warn("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx Constructed WindowOperator cleanly");
 	}
 
 	/**
+	 * kerzn002: Overloaded constructor to provide a place to send late elements.
 	 * Creates a new {@code WindowOperator} based on the given policies and user functions.
 	 */
 	public WindowOperator(WindowAssigner<? super IN, W> windowAssigner,
@@ -230,7 +226,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 		InternalWindowFunction<ACC, OUT, K, W> windowFunction,
 		Trigger<? super IN, ? super W> trigger,
 		long allowedLateness,
-		LateSource lateSink) {
+		LateSource lateSource) {
 
 		super(windowFunction);
 
@@ -244,10 +240,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 		Preconditions.checkArgument(allowedLateness >= 0);
 		this.allowedLateness = allowedLateness;
-
-		this.lateSink = lateSink;
-		Logger LOG = LoggerFactory.getLogger(WindowOperator.class);
-		LOG.warn("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx Constructed WindowOperator");
+		this.lateSource = lateSource;
 
 		setChainingStrategy(ChainingStrategy.ALWAYS);
 	}
@@ -336,19 +329,6 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 		Collection<W> elementWindows = windowAssigner.assignWindows(
 			element.getValue(), element.getTimestamp(), windowAssignerContext);
 
-		Logger LOG = LoggerFactory.getLogger(WindowOperator.class);
-		LOG.warn("ZZZZZZZZZZ Doing processElement in WindowOperator");
-
-		PrintSinkFunction<IN> f = new PrintSinkFunction(true);
-		//f.open(getExecutionConfig().);
-		Configuration cfg = new Configuration();
-		ExecutionConfig.GlobalJobParameters gparams = getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
-		//f.open((Configuration)gparams);
-
-		f.setTargetToStandardErr();
-
-		DiscardingSink<IN> discus = new DiscardingSink<>();
-
 		final K key = (K) getStateBackend().getCurrentKey();
 
 		if (windowAssigner instanceof MergingWindowAssigner) {
@@ -391,9 +371,11 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 				// drop if the window is already late
 				if (isLate(actualWindow)) {
 					mergingWindows.retireWindow(actualWindow);
-					//LOG.warn("ZZZZZZZZZZZZZZ MergingWindow element is very late " + element.toString());
+
 					// kerzn002: AAAAA: merging
-					this.lateSink.capture(element.toString());
+					LOG.warn("AAAAA MergingWindow element is very late " + element.toString());
+					this.lateSource.capture(element.toString());
+
 					continue;
 				}
 
@@ -433,9 +415,11 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 				// drop if the window is already late
 				if (isLate(window)) {
-					LOG.warn("QQQQQQQQQQQ non-MergingWindow element is very late: " + element.getValue().toString());
+
 					// kerzn002: BBBBB: non-merging
-					this.lateSink.capture(element.toString());
+					LOG.warn("BBBBB non-MergingWindow element is very late: " + element.getValue().toString());
+					this.lateSource.capture(element.toString());
+
 					continue;
 				}
 
