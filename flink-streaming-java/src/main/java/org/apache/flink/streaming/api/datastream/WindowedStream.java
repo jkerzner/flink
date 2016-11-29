@@ -107,9 +107,11 @@ public class WindowedStream<T, K, W extends Window> {
 	/** The user-specified allowed lateness. */
 	private long allowedLateness = 0L;
 
-	private PrintSinkFunction<T> lateSink;
-	private DataStream<T> lateStream;
+	// kerzn002: below here, these two member variables added for handling late elements.
+	/** The LateSource function for handling items rejected by the window operator. */
 	private LateSource<String> lSource;
+
+	/** Logger for additional debugging. */
 	Logger LOG = LoggerFactory.getLogger(WindowedStream.class);
 
 	@PublicEvolving
@@ -135,34 +137,14 @@ public class WindowedStream<T, K, W extends Window> {
 	}
 
 	/**
-	 * Sets the time by which elements are allowed to be late. Elements that
-	 * arrive behind the watermark by more than the specified time will be dropped.
-	 * By default, the allowed lateness is {@code 0L}.
+	 * Allows users to setup a {@link DataStream} for late elements elements rejected by the local WindowOperator.
 	 *
-	 * <p>Setting an allowed lateness is only valid for event-time windows.
+	 * @return A {@link org.apache.flink.streaming.api.datastream.DataStream} containing late elements.
 	 */
-	@PublicEvolving
-	public WindowedStream<T, K, W> allowedLateness(Time lateness, PrintSinkFunction s) {
-
-		long millis = lateness.toMilliseconds();
-		if (allowedLateness < 0) {
-			throw new IllegalArgumentException("The allowed lateness cannot be negative.");
-		} else if (allowedLateness != 0 && !windowAssigner.isEventTime()) {
-			throw new IllegalArgumentException("Setting the allowed lateness is only valid for event-time windows.");
-		} else {
-			this.allowedLateness = millis;
-		}
-		return this;
-	}
-
 	public DataStream<T> dumpLateElementsTo() {
-		// kerzn002
-		//this.lateStream = new DataStream<T>(this.input.getExecutionEnvironment(), this.input.getTransformation());
-
 		this.lSource = new LateSource<String>();
-		this.lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
-
-		return this.lateStream;
+		DataStream<T> lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
+		return lateStream;
 	}
 
 	/**
@@ -314,7 +296,6 @@ public class WindowedStream<T, K, W extends Window> {
 	 */
 	public <R> SingleOutputStreamOperator<R> apply(WindowFunction<T, R, K, W> function, TypeInformation<R> resultType) {
 
-
 		//clean the closure
 		function = input.getExecutionEnvironment().clean(function);
 
@@ -356,16 +337,6 @@ public class WindowedStream<T, K, W extends Window> {
 				input.getType().createSerializer(getExecutionEnvironment().getConfig()));
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
-
-
-			PrintSinkFunction<T> printFunction = new PrintSinkFunction<>(true);
-			this.input.getTransformation().getOutputType();
-			if (printFunction instanceof InputTypeConfigurable) {
-				((InputTypeConfigurable) printFunction).setInputType(getInputType(), this.input.getExecutionConfig());
-			}
-			StreamSink<T> sinkOp = new StreamSink(this.input.clean(printFunction));
-			DataStreamSink sink = new DataStreamSink<>(this.input, sinkOp);
-			this.input.getExecutionEnvironment().addOperator(sink.getTransformation());
 
 			// kerzn002 22222: Window-only, non-evicting
 			LOG.warn("PPPPPPPPPPPPPPPP Building the operator at 22222");
