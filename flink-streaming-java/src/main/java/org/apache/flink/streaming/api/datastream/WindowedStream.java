@@ -318,8 +318,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
-			// kerzn002 11111: Window-only, evicting
-			LOG.warn("PPPPPPPPPPPPPPPP Building the operator at 11111");
+			// kerzn002 11111: window-only, evicting
+			LOG.warn("11111: building the window-only, evicting operator");
 			operator =
 				new EvictingWindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -338,8 +338,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
 
-			// kerzn002 22222: Window-only, non-evicting
-			LOG.warn("PPPPPPPPPPPPPPPP Building the operator at 22222");
+			// kerzn002 22222: window-only, non-evicting
+			LOG.warn("22222: building the window-only, non-evicting operator");
 			operator =
 				new WindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -412,8 +412,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
-			// kerzn002: 33333 reduce, evicting
-			LOG.warn("OHNOOOOOOOOOOOES Building the operator at 33333");
+			// kerzn002: 33333 reducing, evicting
+			LOG.warn("33333: building the reducing, evicting operator");
 			operator =
 				new EvictingWindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -433,8 +433,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
 
-			// kerzn002: 44444: reduce, non-evicting
-			LOG.warn("OHNOOOOOOOOOOOES Building the operator at 44444");
+			// kerzn002: 44444: reducing, non-evicting
+			LOG.warn("44444: building the reducing, non-evicting operator");
 			operator =
 				new WindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -512,8 +512,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
-			// kerzn002: 55555: fold, evicting
-			LOG.warn("YYYYYYYYYYY Building the operator at 55555");
+			// kerzn002: 55555: folding, evicting
+			LOG.warn("55555: building the folding, evicting operator");
 			operator = new EvictingWindowOperator<>(windowAssigner,
 				windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
 				keySel,
@@ -531,8 +531,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
 
-			// kerzn002: 66666: fold, non-evicting
-			LOG.warn("YYYYYYYYYYY Building the operator at 66666");
+			// kerzn002: 66666: folding, non-evicting
+			LOG.warn("666666: building the folding, non-evicting operator");
 			operator = new WindowOperator<>(windowAssigner,
 				windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
 				keySel,
