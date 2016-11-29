@@ -29,6 +29,7 @@ import org.apache.flink.api.common.state.StateDescriptor;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.streaming.api.datastream.LateSource;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.assigners.MergingWindowAssigner;
 import org.apache.flink.streaming.api.windowing.assigners.WindowAssigner;
@@ -81,6 +82,25 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 		this.evictor = requireNonNull(evictor);
 		this.windowStateDescriptor = windowStateDescriptor;
 	}
+
+	public EvictingWindowOperator(WindowAssigner<? super IN, W> windowAssigner,
+		TypeSerializer<W> windowSerializer,
+		KeySelector<IN, K> keySelector,
+		TypeSerializer<K> keySerializer,
+		StateDescriptor<? extends ListState<StreamRecord<IN>>, ?> windowStateDescriptor,
+		InternalWindowFunction<Iterable<IN>, OUT, K, W> windowFunction,
+		Trigger<? super IN, ? super W> trigger,
+		Evictor<? super IN, ? super W> evictor,
+		long allowedLateness,
+		LateSource<String> lateStream) {
+
+		super(windowAssigner, windowSerializer, keySelector,
+			keySerializer, null, windowFunction, trigger, allowedLateness);
+		this.evictor = requireNonNull(evictor);
+		this.windowStateDescriptor = windowStateDescriptor;
+		this.lateSink = lateStream;
+	}
+
 
 	@Override
 	@SuppressWarnings("unchecked")

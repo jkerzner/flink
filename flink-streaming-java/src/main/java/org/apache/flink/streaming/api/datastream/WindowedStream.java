@@ -337,6 +337,7 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
+			// kerzn002 11111: Window-only, evicting
 			LOG.warn("PPPPPPPPPPPPPPPP Building the operator at 11111");
 			operator =
 				new EvictingWindowOperator<>(windowAssigner,
@@ -347,7 +348,8 @@ public class WindowedStream<T, K, W extends Window> {
 					new InternalIterableWindowFunction<>(function),
 					trigger,
 					evictor,
-					allowedLateness);
+					allowedLateness,
+					lSource);
 
 		} else {
 			ListStateDescriptor<T> stateDesc = new ListStateDescriptor<>("window-contents",
@@ -365,6 +367,7 @@ public class WindowedStream<T, K, W extends Window> {
 			DataStreamSink sink = new DataStreamSink<>(this.input, sinkOp);
 			this.input.getExecutionEnvironment().addOperator(sink.getTransformation());
 
+			// kerzn002 22222: Window-only, non-evicting
 			LOG.warn("PPPPPPPPPPPPPPPP Building the operator at 22222");
 			operator =
 				new WindowOperator<>(windowAssigner,
@@ -438,6 +441,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
+			// kerzn002: 33333 reduce, evicting
+			LOG.warn("OHNOOOOOOOOOOOES Building the operator at 33333");
 			operator =
 				new EvictingWindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -447,7 +452,8 @@ public class WindowedStream<T, K, W extends Window> {
 					new InternalIterableWindowFunction<>(new ReduceApplyWindowFunction<>(reduceFunction, function)),
 					trigger,
 					evictor,
-					allowedLateness);
+					allowedLateness,
+					lSource);
 
 		} else {
 			ReducingStateDescriptor<T> stateDesc = new ReducingStateDescriptor<>("window-contents",
@@ -455,8 +461,9 @@ public class WindowedStream<T, K, W extends Window> {
 				input.getType().createSerializer(getExecutionEnvironment().getConfig()));
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
-			LOG.warn("OHNOOOOOOOOOOOES Building the operator at 33333");
 
+			// kerzn002: 44444: reduce, non-evicting
+			LOG.warn("OHNOOOOOOOOOOOES Building the operator at 44444");
 			operator =
 				new WindowOperator<>(windowAssigner,
 					windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
@@ -534,6 +541,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + evictor + ", " + udfName + ")";
 
+			// kerzn002: 55555: fold, evicting
+			LOG.warn("YYYYYYYYYYY Building the operator at 55555");
 			operator = new EvictingWindowOperator<>(windowAssigner,
 				windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
 				keySel,
@@ -542,7 +551,8 @@ public class WindowedStream<T, K, W extends Window> {
 				new InternalIterableWindowFunction<>(new FoldApplyWindowFunction<>(initialValue, foldFunction, function)),
 				trigger,
 				evictor,
-				allowedLateness);
+				allowedLateness,
+				lSource);
 
 		} else {
 			FoldingStateDescriptor<T, R> stateDesc = new FoldingStateDescriptor<>("window-contents",
@@ -550,6 +560,8 @@ public class WindowedStream<T, K, W extends Window> {
 
 			opName = "TriggerWindow(" + windowAssigner + ", " + stateDesc + ", " + trigger + ", " + udfName + ")";
 
+			// kerzn002: 66666: fold, non-evicting
+			LOG.warn("YYYYYYYYYYY Building the operator at 66666");
 			operator = new WindowOperator<>(windowAssigner,
 				windowAssigner.getWindowSerializer(getExecutionEnvironment().getConfig()),
 				keySel,
@@ -557,7 +569,8 @@ public class WindowedStream<T, K, W extends Window> {
 				stateDesc,
 				new InternalSingleValueWindowFunction<>(function),
 				trigger,
-				allowedLateness);
+				allowedLateness,
+				lSource);
 		}
 
 		return input.transform(opName, resultType, operator);
