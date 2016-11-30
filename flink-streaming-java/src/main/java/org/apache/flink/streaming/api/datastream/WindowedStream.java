@@ -30,19 +30,16 @@ import org.apache.flink.api.common.state.ReducingStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.Utils;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.typeutils.InputTypeConfigurable;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.aggregation.AggregationFunction;
 import org.apache.flink.streaming.api.functions.aggregation.ComparableAggregator;
 import org.apache.flink.streaming.api.functions.aggregation.SumAggregator;
-import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
 import org.apache.flink.streaming.api.functions.windowing.FoldApplyWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.PassThroughWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.ReduceApplyWindowFunction;
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.operators.OneInputStreamOperator;
-import org.apache.flink.streaming.api.operators.StreamSink;
 import org.apache.flink.streaming.api.windowing.assigners.MergingWindowAssigner;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
@@ -138,14 +135,33 @@ public class WindowedStream<T, K, W extends Window> {
 
 	/**
 	 * Allows users to setup a {@link DataStream} for late elements elements rejected by the local WindowOperator.
-	 *
+	 * This allows the user to set a unique name for their new stream if they want.
+	 * @return A {@link org.apache.flink.streaming.api.datastream.DataStream} containing late elements.
+	 */
+	public DataStream<T> dumpLateElementsTo(String identifier) {
+		this.lSource = new LateSource<String>(identifier);
+
+		DataStream<T> lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
+		this.input.getExecutionEnvironment().addSource(this.lSource, identifier);
+
+		return lateStream;
+	}
+
+	/**
+	 * Allows users to setup a {@link DataStream} for late elements elements rejected by the local WindowOperator.
+	 * This automatically creates a new name for the late stream based on the Id of the incoming elements
 	 * @return A {@link org.apache.flink.streaming.api.datastream.DataStream} containing late elements.
 	 */
 	public DataStream<T> dumpLateElementsTo() {
-		this.lSource = new LateSource<String>();
+		String lIdentifier = "late-" + String.valueOf(this.input.getId());
+		this.lSource = new LateSource<String>(lIdentifier);
+
 		DataStream<T> lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
+		this.input.getExecutionEnvironment().addSource(this.lSource, lIdentifier);
+
 		return lateStream;
 	}
+
 
 	/**
 	 * Sets the time by which elements are allowed to be late. Elements that

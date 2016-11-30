@@ -39,7 +39,6 @@ import org.apache.flink.streaming.api.windowing.triggers.TriggerResult;
 import org.apache.flink.streaming.api.windowing.windows.Window;
 import org.apache.flink.streaming.runtime.operators.windowing.functions.InternalWindowFunction;
 import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
@@ -161,7 +160,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 
 					// kerzn002: CCCCC: merging
 					LOG.warn("CCCCC MergingWindow element is very late " + element.toString());
-					this.lateSource.capture(element.toString());
+					this.lateSource.capture(element.toString(), this.lateSource.getIdentifier());
 
 					continue;
 				}
@@ -206,7 +205,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 
 					// kerzn002: DDDDD: non-merging
 					LOG.warn("DDDDD non-MergingWindow element is very late: " + element.getValue().toString());
-					this.lateSource.capture(element.toString());
+					this.lateSource.capture(element.toString(), this.lateSource.getIdentifier());
 
 					continue;
 				}
