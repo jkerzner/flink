@@ -91,7 +91,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 		Trigger<? super IN, ? super W> trigger,
 		Evictor<? super IN, ? super W> evictor,
 		long allowedLateness,
-		LateSource<String> lateSource) {
+		LateSource lateSource) {
 
 		super(windowAssigner, windowSerializer, keySelector,
 			keySerializer, null, windowFunction, trigger, allowedLateness);
@@ -160,7 +160,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 
 					// kerzn002: CCCCC: merging
 					LOG.warn("CCCCC MergingWindow element is very late " + element.toString());
-					this.lateSource.capture(element.toString(), this.lateSource.getIdentifier());
+					this.lateSource.capture(element, this.lateSource.getIdentifier());
 
 					continue;
 				}
@@ -205,7 +205,7 @@ public class EvictingWindowOperator<K, IN, OUT, W extends Window> extends Window
 
 					// kerzn002: DDDDD: non-merging
 					LOG.warn("DDDDD non-MergingWindow element is very late: " + element.getValue().toString());
-					this.lateSource.capture(element.toString(), this.lateSource.getIdentifier());
+					this.lateSource.capture(element, this.lateSource.getIdentifier());
 
 					continue;
 				}

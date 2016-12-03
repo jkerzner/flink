@@ -1,10 +1,10 @@
 package org.apache.flink.streaming.api.datastream;
 
 import org.apache.flink.api.common.functions.StoppableFunction;
-import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,22 +15,27 @@ import java.util.Map;
 import java.util.HashMap;
 
 
-public class LateSource<T> implements SourceFunction, ResultTypeQueryable, StoppableFunction {
+public class LateSource implements SourceFunction, ResultTypeQueryable, StoppableFunction {
 
 	// shared multiplexer for incoming elements so they get passed to the correct streams
-	private static Map<String, List> sharedBuffer = Collections.synchronizedMap(new HashMap<String, List>());
+	private static Map<String, List<StreamRecord>> sharedBuffer = Collections.synchronizedMap(new HashMap<String, List<StreamRecord>>());
 
 	// each actual LateSource has a unique identifier based the elements' original source
 	private String identifier;
 
-	private transient volatile boolean running = true;
-	Logger LOG = LoggerFactory.getLogger(LateSource.class);
+	// the type of value in each list queue. this is necessary for getProducedType() so that users' streams know
+	// what comes out of the late elements.
+	private TypeInformation elementValueType;
 
-	public LateSource(String id) {
+	private transient volatile boolean running = true;
+	private Logger LOG = LoggerFactory.getLogger(LateSource.class);
+
+	LateSource(String id, TypeInformation ti) {
 		this.identifier = id;
+		this.elementValueType = ti;
 
 		// register the new LateSource in the buffer so we have a place to receive elements
-		sharedBuffer.put(id, Collections.synchronizedList(new LinkedList<String>()));
+		sharedBuffer.put(id, Collections.synchronizedList(new LinkedList<StreamRecord>()));
 	}
 
 	@Override
@@ -42,7 +47,10 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 			// check to see if our buffer in the hashmap has anything waiting for us to consume
 			if(sharedBuffer.get(this.identifier).size() > 0) {
 				synchronized (ctx) {
-					ctx.collect(this.identifier + " ===> " + (String) sharedBuffer.get(this.identifier).remove(0));
+					ctx.collect(
+						((StreamRecord)sharedBuffer.get(this.identifier).remove(0))
+						.getValue()
+					);
 				}
 			}
 		}
@@ -53,7 +61,7 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 		running = false;
 	}
 
-	public void capture(T e, String eId) {
+	public void capture(StreamRecord e, String eId) {
 
 		// do not process this element if it's not bound for this thread
 		if (! eId.equals(this.identifier)) { return; }
@@ -62,12 +70,15 @@ public class LateSource<T> implements SourceFunction, ResultTypeQueryable, Stopp
 		sharedBuffer.get(eId).add(e);
 
 		LOG.warn("IIIIIIIIIIIIIIIIIIIIIIIIIII captured into the shared buffer.");
-		return;
 	}
 
 	@Override
 	public TypeInformation getProducedType() {
-		return TypeInformation.of(new TypeHint<String>(){});
+		return this.elementValueType;
+	}
+
+	public void setTypeInformation(TypeInformation q) {
+		this.elementValueType = q;
 	}
 
 	@Override

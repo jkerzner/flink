@@ -106,7 +106,7 @@ public class WindowedStream<T, K, W extends Window> {
 
 	// kerzn002: below here, these two member variables added for handling late elements.
 	/** The LateSource function for handling items rejected by the window operator. */
-	private LateSource<String> lSource;
+	private LateSource lSource;
 
 	/** Logger for additional debugging. */
 	Logger LOG = LoggerFactory.getLogger(WindowedStream.class);
@@ -139,7 +139,7 @@ public class WindowedStream<T, K, W extends Window> {
 	 * @return A {@link org.apache.flink.streaming.api.datastream.DataStream} containing late elements.
 	 */
 	public DataStream<T> dumpLateElementsTo(String identifier) {
-		this.lSource = new LateSource<String>(identifier);
+		this.lSource = new LateSource(identifier, this.input.getTransformation().getOutputType());
 
 		DataStream<T> lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
 		this.input.getExecutionEnvironment().addSource(this.lSource, identifier);
@@ -153,11 +153,11 @@ public class WindowedStream<T, K, W extends Window> {
 	 * @return A {@link org.apache.flink.streaming.api.datastream.DataStream} containing late elements.
 	 */
 	public DataStream<T> dumpLateElementsTo() {
-		String lIdentifier = "late-" + String.valueOf(this.input.getId());
-		this.lSource = new LateSource<String>(lIdentifier);
+		String identifier = "late-" + String.valueOf(this.input.getId());
+		this.lSource = new LateSource(identifier, this.input.getTransformation().getOutputType());
 
 		DataStream<T> lateStream = this.input.getExecutionEnvironment().addSource(this.lSource);
-		this.input.getExecutionEnvironment().addSource(this.lSource, lIdentifier);
+		this.input.getExecutionEnvironment().addSource(this.lSource, identifier);
 
 		return lateStream;
 	}
