@@ -43,7 +43,6 @@ public class LateSource implements SourceFunction, ResultTypeQueryable, Stoppabl
 		running = true;
 
 		while(running) {
-
 			// check to see if our buffer in the hashmap has anything waiting for us to consume
 			if(sharedBuffer.get(this.identifier).size() > 0) {
 				synchronized (ctx) {
@@ -69,7 +68,7 @@ public class LateSource implements SourceFunction, ResultTypeQueryable, Stoppabl
 		// add the element into the appropriate queue
 		sharedBuffer.get(eId).add(e);
 
-		LOG.warn("IIIIIIIIIIIIIIIIIIIIIIIIIII captured into the shared buffer.");
+		LOG.warn("=====> " + this.identifier + " captured " + e.toString() + " into the shared buffer.");
 	}
 
 	@Override
