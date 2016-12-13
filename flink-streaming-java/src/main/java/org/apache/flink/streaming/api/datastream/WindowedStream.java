@@ -106,7 +106,7 @@ public class WindowedStream<T, K, W extends Window> {
 
 	// kerzn002: below here, these two member variables added for handling late elements.
 	/** The LateSource function for handling items rejected by the window operator. */
-	private LateSource lSource;
+	private LateSource lSource = null;
 
 	/** Logger for additional debugging. */
 	Logger LOG = LoggerFactory.getLogger(WindowedStream.class);

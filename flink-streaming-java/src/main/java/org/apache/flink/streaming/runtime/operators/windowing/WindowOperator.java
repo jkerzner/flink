@@ -374,7 +374,9 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 					// kerzn002: AAAAA: merging
 					LOG.warn("AAAAA MergingWindow element is very late " + element.toString());
-					this.lateSource.capture(element, this.lateSource.getIdentifier());
+					if (this.lateSource != null) {
+						this.lateSource.capture(element, this.lateSource.getIdentifier());
+					}
 
 					continue;
 				}
@@ -418,7 +420,9 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
 
 					// kerzn002: BBBBB: non-merging
 					LOG.warn("BBBBB non-MergingWindow element is very late: " + element.getValue().toString());
-					this.lateSource.capture(element, this.lateSource.getIdentifier());
+					if (this.lateSource != null) {
+						this.lateSource.capture(element, this.lateSource.getIdentifier());
+					}
 
 					continue;
 				}
